@@ -1,0 +1,33 @@
+syntax = "proto3";
+option go_package = "queuepb";
+
+// The API service definition for requesting a crawl of url
+service Queue {
+    // Sends a api request
+    rpc Submit (QueueSubmitRequest) returns (QueueSubmitReply) {
+    }
+    rpc Get (QueueGetRequest) returns (QueueGetReply) {
+    }
+}
+
+// Queue url crawl with session credentials
+message QueueSubmitRequest {
+    string session = 1;
+    string url = 2;
+    int32 depth = 3;
+    string job = 4;
+}
+
+message QueueSubmitReply {
+}
+
+// Queue url crawl with session credentials
+message QueueGetRequest {
+    string session = 1;
+}
+
+message QueueGetReply {
+    string url = 1;
+    int32 depth = 2;
+    string job = 3;
+}

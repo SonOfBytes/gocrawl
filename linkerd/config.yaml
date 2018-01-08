@@ -1,0 +1,35 @@
+admin:
+  port: 9990
+
+namers:
+- kind: io.l5d.fs
+  rootDir: /disco
+
+routers:
+- protocol: http
+  label: admin
+  dtab: |
+    /svc/0.0.0.0:8090 => /$/inet/localhost/9990;
+  servers:
+  - ip: 0.0.0.0
+    port: 8090
+
+- protocol: http
+  label: services
+  dtab: |
+    /svc/0.0.0.0:8080 => /$/inet/frontend/8888;
+  servers:
+  - ip: 0.0.0.0
+    port: 8080
+
+- protocol: h2
+  experimental: true
+  label: grpc
+  servers:
+  - ip: 0.0.0.0
+    port: 8088
+  identifier:
+    kind: io.l5d.header.path
+    segments: 2
+  dtab: |
+    /svc => /#/io.l5d.fs;

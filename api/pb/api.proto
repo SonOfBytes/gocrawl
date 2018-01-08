@@ -1,0 +1,55 @@
+syntax = "proto3";
+option go_package = "apipb";
+
+// The API service definition for requesting a crawl of url
+service API {
+    // Sends a api request to process an URL
+    rpc Submit (APISubmitRequest) returns (APISubmitReply) {
+    }
+    // Gets a response for an URL
+    rpc Get (APIGetRequest) returns (APIGetReply) {
+    }
+    // Sends a authentication request
+    rpc Authenticate (APIAuthenticateRequest) returns (APIAuthenticateReply) {
+    }
+    // Sends a validaton request
+    rpc Validate (APIValidateRequest) returns (APIValidateReply) {
+    }
+}
+
+message APIAuthenticateRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message APIAuthenticateReply {
+    string session = 1;
+}
+
+message APIValidateRequest {
+    string session = 1;
+}
+
+message APIValidateReply {
+    bool valid = 1;
+}
+
+// Request url crawl with session credentials
+message APISubmitRequest {
+    string session = 1;
+    string url = 2;
+}
+
+message APISubmitReply {
+    string job = 1;
+}
+
+// Get url crawl results with session credentials
+message APIGetRequest {
+    string session = 1;
+    string url = 2;
+}
+
+message APIGetReply {
+    repeated string urls = 1;
+}

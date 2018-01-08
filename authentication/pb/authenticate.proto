@@ -1,0 +1,29 @@
+syntax = "proto3";
+option go_package = "authpb";
+
+// The Authentication service definition
+service Authentication {
+    // Sends a authentication request
+    rpc Authenticate (AuthenticateRequest) returns (AuthenticateReply) {
+    }
+    // Sends a validaton request
+    rpc Validate (ValidateRequest) returns (ValidateReply) {
+    }
+}
+
+message AuthenticateRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message AuthenticateReply {
+    string session = 1;
+}
+
+message ValidateRequest {
+    string session = 1;
+}
+
+message ValidateReply {
+    bool valid = 1;
+}

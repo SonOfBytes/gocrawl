@@ -1,0 +1,54 @@
+version: '2'
+services:
+  linkerd:
+    build: linkerd
+    ports:
+      - "8080:8080"
+      - "8088:8088"
+      - "8090:8090"
+    links:
+      - authentication
+      - api
+      - queue
+      - store
+      - frontend
+    depends_on:
+      - authentication
+  api:
+    build: api
+    volumes:
+      - .:/go/src/github.com/sonofbytes/gocrawl
+    ports:
+      - "8888"
+  authentication:
+    build: authentication
+    volumes:
+      - .:/go/src/github.com/sonofbytes/gocrawl
+    ports:
+      - "8888"
+  queue:
+    build: queue
+    volumes:
+      - .:/go/src/github.com/sonofbytes/gocrawl
+    ports:
+      - "8888"
+  store:
+    build: store
+    volumes:
+      - .:/go/src/github.com/sonofbytes/gocrawl
+    ports:
+      - "8888"
+  retriever:
+    build: retriever
+    volumes:
+      - .:/go/src/github.com/sonofbytes/gocrawl
+    ports:
+      - "8888"
+    links:
+      - linkerd
+  frontend:
+    build: frontend
+    volumes:
+      - .:/go/src/github.com/sonofbytes/gocrawl
+    ports:
+      - "8888"

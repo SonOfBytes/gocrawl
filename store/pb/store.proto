@@ -1,0 +1,30 @@
+syntax = "proto3";
+option go_package = "storepb";
+
+// The Store service definition for storing results of a crawl of url
+service Store {
+    rpc Submit (StoreSubmitRequest) returns (StoreSubmitReply) {
+    }
+    rpc Get (StoreGetRequest) returns (StoreGetReply) {
+    }
+}
+
+// Store url crawl results with session credentials
+message StoreSubmitRequest {
+    string session = 1;
+    string url = 2;
+    repeated string urls = 3;
+}
+
+message StoreSubmitReply {
+}
+
+// Get stored url crawl results with session credentials
+message StoreGetRequest {
+    string session = 1;
+    string url = 2;
+}
+
+message StoreGetReply {
+    repeated string urls = 1;
+}
