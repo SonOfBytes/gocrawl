@@ -24,6 +24,10 @@ Get the repository of code
 
 `git clone https://github.com/SonOfBytes/gocrawl.git`
 
+Add vendor dependencies
+
+`dep ensure`
+
 Build the cli binary
 
 `make`
