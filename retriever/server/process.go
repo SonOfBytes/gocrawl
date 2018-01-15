@@ -14,16 +14,13 @@ import (
 
 	"strings"
 
-	"github.com/remeh/sizedwaitgroup"
 	"golang.org/x/net/html"
 )
 
 const maxDepth = 20
 
 // process will be launched as a go routine so must be self sufficient
-func (s *Server) process(swg *sizedwaitgroup.SizedWaitGroup, url string, depth int, job string) {
-	defer swg.Done()
-
+func (s *Server) process(url string, depth int, job string) {
 	if depth > maxDepth {
 		log.Printf("Depth exceeded for http.Get [%d]: %s", depth, url)
 		return

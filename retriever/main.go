@@ -13,5 +13,5 @@ func main() {
 	log.Println("retriever started")
 
 	s := server.New(authClient.New(), queueClient.New(), storeClient.New())
-	s.Wait()
+	s.Run()
 }

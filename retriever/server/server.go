@@ -10,12 +10,9 @@ import (
 
 	"net"
 
-	"github.com/remeh/sizedwaitgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-const maxConcurrentGet = 4
 
 // AuthService is an interface to meet the authentication needs
 type AuthService interface {
@@ -38,13 +35,17 @@ type StoreService interface {
 
 // Server performs the retrieval from Queue and gets the URL contents
 type Server struct {
-	authService  AuthService
-	queueService QueueService
-	storeService StoreService
-	session      string
-	lock         sync.Mutex
-	wg           sync.WaitGroup
+	authService   AuthService
+	queueService  QueueService
+	storeService  StoreService
+	session       string
+	sessionExpire time.Time
+	lock          sync.Mutex
+	wg            sync.WaitGroup
 }
+
+// DoOnfLoop will loop forever while true - false when testing or cancelled
+var DoInfLoop = true
 
 // New creates a gRPC server instance for Retriever
 func New(authService AuthService, queueService QueueService, storeService StoreService) *Server {
@@ -64,21 +65,6 @@ func New(authService AuthService, queueService QueueService, storeService StoreS
 	s.queueService.SetConnection(addr)
 	s.storeService.SetConnection(addr)
 
-	// keeps a valid session active (assumes sessions longer than a minute)
-	go func() {
-		for {
-			var err error
-			session, err := s.authService.Authenticate("someone", "hardcoded")
-			s.setSession(session)
-			if err == nil {
-				time.Sleep(time.Minute)
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
-
-	s.wg.Add(1)
-	go s.Run()
 	return s
 }
 
@@ -91,26 +77,28 @@ func (s *Server) setSession(session string) {
 func (s *Server) getSession() string {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	for s.session == "" || s.sessionExpire.Before(time.Now()) {
+		session, err := s.authService.Authenticate("someone", "hardcoded")
+		if err != nil {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		s.session = session
+		s.sessionExpire = time.Now().Add(time.Minute)
+	}
 	return s.session
 }
 
-// Wait waits until the waitgroup is complete
-func (s *Server) Wait() {
-	s.wg.Wait()
-}
-
 // Run loops and processes the queue
-func (s *Server) Run() {
-	defer s.wg.Done()
-	// wait until authentication session is valid
-	for s.getSession() == "" {
-		time.Sleep(time.Millisecond)
+func (s *Server) Run(process ...func(url string, depth int, job string)) {
+	// set a default process if not defined in the Run call
+	if process == nil {
+		process = append(process, s.process)
 	}
-	// use sized wait group to throttle process concurrency
-	swg := sizedwaitgroup.New(maxConcurrentGet)
 
-	// process queue
-	for {
+	var loop = true
+	// process queue while loop is true
+	for loop {
 		url, depth, job, err := s.queueService.Get(context.Background(), s.getSession())
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
@@ -122,7 +110,9 @@ func (s *Server) Run() {
 			log.Printf("failed Get: %s", err)
 			time.Sleep(time.Second)
 		}
-		swg.Add()
-		go s.process(&swg, url, depth, job)
+		for _, p := range process {
+			p(url, depth, job)
+		}
+		loop = DoInfLoop
 	}
 }
